@@ -1,0 +1,1210 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>自动听写工具</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --background: 0 0% 3.9%;
+            --foreground: 0 0% 98%;
+            --card: 0 0% 3.9%;
+            --card-foreground: 0 0% 98%;
+            --popover: 0 0% 3.9%;
+            --popover-foreground: 0 0% 98%;
+            --primary: 0 0% 98%;
+            --primary-foreground: 0 0% 9%;
+            --secondary: 0 0% 14.9%;
+            --secondary-foreground: 0 0% 98%;
+            --muted: 0 0% 14.9%;
+            --muted-foreground: 0 0% 63.9%;
+            --accent: 0 0% 14.9%;
+            --accent-foreground: 0 0% 98%;
+            --destructive: 0 62.8% 30.6%;
+            --destructive-foreground: 0 0% 98%;
+            --border: 0 0% 14.9%;
+            --input: 0 0% 14.9%;
+            --ring: 0 0% 83.1%;
+            --radius: 0.5rem;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+            background: hsl(var(--background));
+            color: hsl(var(--foreground));
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 8px;
+            font-size: 28px;
+            font-weight: 600;
+            letter-spacing: -0.02em;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: hsl(var(--muted-foreground));
+            margin-bottom: 32px;
+            font-size: 14px;
+        }
+
+        /* 上传区域 */
+        .upload-section {
+            border: 2px dashed hsl(var(--border));
+            border-radius: var(--radius);
+            padding: 32px;
+            text-align: center;
+            background: hsl(var(--card));
+            transition: all 0.2s ease;
+            cursor: pointer;
+            margin-bottom: 24px;
+        }
+
+        .upload-section:hover {
+            border-color: hsl(var(--ring));
+            background: hsl(var(--accent));
+        }
+
+        .upload-section.dragover {
+            border-color: hsl(var(--ring));
+            background: hsl(var(--accent));
+        }
+
+        .upload-text {
+            color: hsl(var(--muted-foreground));
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        /* 缩略图容器 */
+        .thumbnails-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .thumbnail-item {
+            position: relative;
+            width: 80px;
+            height: 80px;
+            border-radius: 6px;
+            overflow: hidden;
+            border: 1px solid hsl(var(--border));
+        }
+
+        .thumbnail-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .thumbnail-item .remove-btn {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: hsl(var(--destructive));
+            color: hsl(var(--destructive-foreground));
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .thumbnail-item:hover .remove-btn {
+            opacity: 1;
+        }
+
+        /* 图片预览弹窗 */
+        .image-preview-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.9);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 40px;
+        }
+
+        .image-preview-overlay.show {
+            display: flex;
+        }
+
+        .image-preview-overlay img {
+            max-width: 90%;
+            max-height: 90%;
+            border-radius: 8px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+        }
+
+        .image-preview-overlay .close-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: hsl(var(--secondary));
+            color: hsl(var(--secondary-foreground));
+            border: none;
+            cursor: pointer;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .image-preview-overlay .close-btn:hover {
+            background: hsl(var(--destructive));
+            color: hsl(var(--destructive-foreground));
+        }
+
+        /* OCR 状态 */
+        .status {
+            padding: 12px 16px;
+            border-radius: var(--radius);
+            margin-bottom: 24px;
+            display: none;
+            font-size: 14px;
+        }
+
+        .status.loading {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: hsl(var(--secondary));
+            color: hsl(var(--secondary-foreground));
+        }
+
+        .status.success {
+            display: block;
+            background: hsl(142.1 76.2% 36.3% / 0.1);
+            color: hsl(142.1 76.2% 36.3%);
+            border: 1px solid hsl(142.1 76.2% 36.3% / 0.2);
+        }
+
+        .status.error {
+            display: block;
+            background: hsl(var(--destructive) / 0.1);
+            color: hsl(var(--destructive-foreground));
+            border: 1px solid hsl(var(--destructive) / 0.2);
+        }
+
+        .spinner {
+            width: 16px;
+            height: 16px;
+            border: 2px solid hsl(var(--muted));
+            border-top-color: hsl(var(--foreground));
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* 识别结果编辑区 */
+        .result-section {
+            margin-bottom: 24px;
+            display: none;
+        }
+
+        .result-section.show {
+            display: block;
+        }
+
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .result-header h2 {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: var(--radius);
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-weight: 500;
+        }
+
+        .btn-primary {
+            background: hsl(var(--primary));
+            color: hsl(var(--primary-foreground));
+        }
+
+        .btn-primary:hover {
+            background: hsl(var(--primary) / 0.9);
+        }
+
+        .btn-secondary {
+            background: hsl(var(--secondary));
+            color: hsl(var(--secondary-foreground));
+        }
+
+        .btn-secondary:hover {
+            background: hsl(var(--secondary) / 0.8);
+        }
+
+        .btn-ghost {
+            background: transparent;
+            color: hsl(var(--muted-foreground));
+        }
+
+        .btn-ghost:hover {
+            background: hsl(var(--accent));
+            color: hsl(var(--accent-foreground));
+        }
+
+        .btn-destructive {
+            background: hsl(var(--destructive));
+            color: hsl(var(--destructive-foreground));
+        }
+
+        .btn-destructive:hover {
+            background: hsl(var(--destructive) / 0.9);
+        }
+
+        .result-list {
+            background: hsl(var(--card));
+            border-radius: var(--radius);
+            border: 1px solid hsl(var(--border));
+            padding: 16px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .result-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 8px;
+            padding: 10px 12px;
+            background: hsl(var(--secondary));
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .result-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .result-item.current-playing {
+            background: hsl(217.2 91.2% 59.8% / 0.1);
+            border: 1px solid hsl(217.2 91.2% 59.8% / 0.3);
+        }
+
+        .item-number {
+            color: hsl(var(--muted-foreground));
+            font-size: 12px;
+            font-weight: 500;
+            min-width: 24px;
+        }
+
+        .item-input {
+            flex: 1;
+            border: none;
+            background: transparent;
+            font-size: 14px;
+            color: hsl(var(--foreground));
+            outline: none;
+        }
+
+        .item-input:focus {
+            background: hsl(var(--background));
+            border-radius: 4px;
+            padding: 4px 8px;
+            margin: -4px -8px;
+        }
+
+        .btn-delete {
+            padding: 4px 8px;
+            font-size: 16px;
+            color: hsl(var(--muted-foreground));
+            background: transparent;
+        }
+
+        .btn-delete:hover {
+            color: hsl(var(--destructive));
+            background: hsl(var(--destructive) / 0.1);
+        }
+
+        .btn-speak {
+            padding: 4px 8px;
+            font-size: 16px;
+            color: hsl(var(--muted-foreground));
+            background: transparent;
+        }
+
+        .btn-speak:hover {
+            color: hsl(217.2 91.2% 59.8%);
+            background: hsl(217.2 91.2% 59.8% / 0.1);
+        }
+
+        /* 播放控制区 */
+        .player-section {
+            background: hsl(var(--card));
+            border-radius: var(--radius);
+            border: 1px solid hsl(var(--border));
+            padding: 24px;
+        }
+
+        .progress-indicator {
+            text-align: center;
+            font-size: 14px;
+            color: hsl(var(--muted-foreground));
+            margin-bottom: 20px;
+        }
+
+        .progress-indicator strong {
+            color: hsl(var(--foreground));
+            font-size: 18px;
+        }
+
+        .player-controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .btn-play {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: hsl(var(--primary));
+            color: hsl(var(--primary-foreground));
+            font-size: 24px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-play #playIcon {
+            font-size: 28px;
+        }
+
+        .btn-play #playText {
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        .btn-play:hover {
+            transform: scale(1.05);
+        }
+
+        .btn-play:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-nav {
+            padding: 8px 12px;
+        }
+
+        /* 间隔设置 */
+        .interval-section {
+            padding-top: 20px;
+            border-top: 1px solid hsl(var(--border));
+        }
+
+        .interval-section h3 {
+            font-size: 13px;
+            font-weight: 500;
+            margin-bottom: 16px;
+            color: hsl(var(--muted-foreground));
+        }
+
+        .interval-slider {
+            width: 100%;
+            margin: 16px 0;
+            -webkit-appearance: none;
+            height: 4px;
+            border-radius: 2px;
+            background: hsl(var(--secondary));
+            outline: none;
+        }
+
+        .interval-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: hsl(var(--primary));
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .interval-slider::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+        }
+
+        .interval-slider::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: hsl(var(--primary));
+            cursor: pointer;
+            border: none;
+        }
+
+        .interval-labels {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .interval-label {
+            text-align: center;
+            color: hsl(var(--muted-foreground));
+            font-size: 12px;
+            transition: all 0.2s ease;
+        }
+
+        .interval-label.active {
+            color: hsl(var(--foreground));
+            font-weight: 500;
+        }
+
+        .interval-value {
+            text-align: center;
+            font-size: 28px;
+            font-weight: 600;
+            margin-top: 12px;
+            color: hsl(var(--foreground));
+        }
+
+        .interval-unit {
+            font-size: 14px;
+            color: hsl(var(--muted-foreground));
+            font-weight: 400;
+        }
+
+        /* 响应式 */
+        @media (max-width: 600px) {
+            body {
+                padding: 20px 16px;
+            }
+
+            h1 {
+                font-size: 22px;
+            }
+
+            .player-controls {
+                flex-direction: column;
+                gap: 12px;
+            }
+
+            .result-item {
+                flex-wrap: wrap;
+            }
+        }
+
+        /* 滚动条样式 */
+        .result-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .result-list::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .result-list::-webkit-scrollbar-thumb {
+            background: hsl(var(--border));
+            border-radius: 3px;
+        }
+
+        .result-list::-webkit-scrollbar-thumb:hover {
+            background: hsl(var(--muted-foreground));
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>自动听写工具</h1>
+        <p class="subtitle">上传手写图片 → OCR识别 → 语音播报听写</p>
+
+        <!-- 上传区域 -->
+        <div class="upload-section" id="uploadArea">
+            <div class="upload-text">
+                点击或拖拽图片到此处上传<br>
+                支持多张图片，JPG/PNG 格式
+            </div>
+            <div class="thumbnails-container" id="thumbnailsContainer"></div>
+            <input type="file" id="fileInput" accept="image/*" multiple>
+        </div>
+
+        <!-- 状态提示 -->
+        <div class="status" id="status"></div>
+
+        <!-- 识别结果区域 -->
+        <div class="result-section" id="resultSection">
+            <div class="result-header">
+                <h2>识别结果</h2>
+                <button class="btn btn-secondary" onclick="addItem()">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 6px;">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                    添加条目
+                </button>
+            </div>
+            <div class="result-list" id="resultList"></div>
+        </div>
+
+        <!-- 图片预览弹窗 -->
+        <div class="image-preview-overlay" id="imagePreview">
+            <button class="close-btn" onclick="closeImagePreview()">×</button>
+            <img id="previewImage" src="" alt="预览">
+        </div>
+
+        <!-- 播放控制区 -->
+        <div class="player-section" id="playerSection">
+            <div class="progress-indicator" id="progressIndicator" style="display: none;">
+                准备播放第 <strong id="currentIndex">1</strong> / <strong id="totalCount">0</strong> 条
+            </div>
+
+            <div class="player-controls">
+                <button class="btn btn-secondary btn-nav" onclick="prevItem()" id="btnPrev" disabled>上一个</button>
+                <button class="btn btn-play" onclick="togglePlay()" id="btnPlay" disabled>
+                    <span id="playIcon">▶</span>
+                    <span id="playText">开始听写</span>
+                </button>
+                <button class="btn btn-secondary btn-nav" onclick="nextItem()" id="btnNext" disabled>下一个</button>
+            </div>
+
+            <!-- 设置选项 -->
+            <div style="display: flex; justify-content: center; align-items: center; gap: 24px; margin-top: 20px;">
+                <!-- 播放间隔 -->
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <label style="font-size: 13px; color: hsl(var(--muted-foreground));">播放间隔</label>
+                    <select id="intervalSlider" style="padding: 6px 12px; border-radius: 6px; background: hsl(var(--secondary)); color: hsl(var(--foreground)); border: 1px solid hsl(var(--border)); font-size: 13px; cursor: pointer;">
+                        <option value="5">5 秒</option>
+                        <option value="10" selected>10 秒</option>
+                        <option value="15">15 秒</option>
+                        <option value="20">20 秒</option>
+                        <option value="25">25 秒</option>
+                    </select>
+                </div>
+
+                <!-- 循环次数 -->
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <label style="font-size: 13px; color: hsl(var(--muted-foreground));">循环次数</label>
+                    <select id="loopCount" style="padding: 6px 12px; border-radius: 6px; background: hsl(var(--secondary)); color: hsl(var(--foreground)); border: 1px solid hsl(var(--border)); font-size: 13px; cursor: pointer;">
+                        <option value="1">1 次</option>
+                        <option value="2">2 次</option>
+                        <option value="3">3 次</option>
+                        <option value="4">4 次</option>
+                        <option value="5">5 次</option>
+                    </select>
+                </div>
+            </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 全局状态
+        let uploadedFiles = []; // 存储上传的文件
+        let items = [];
+        let currentIndex = 0;
+        let isPlaying = false;
+        let playTimeout = null;
+        let speechSynth = window.speechSynthesis;
+        let currentUtterance = null;
+
+        // 文件上传
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const thumbnailsContainer = document.getElementById('thumbnailsContainer');
+
+        uploadArea.addEventListener('click', (e) => {
+            if (e.target.closest('.remove-btn') || e.target.closest('.thumbnail-item')) return;
+            fileInput.click();
+        });
+
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
+            if (files.length > 0) {
+                handleFiles(files);
+            }
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            const files = Array.from(e.target.files);
+            if (files.length > 0) {
+                handleFiles(files);
+            }
+        });
+
+        // 处理多个文件
+        function handleFiles(files) {
+            files.forEach(file => {
+                uploadedFiles.push(file);
+                addThumbnail(file);
+            });
+            
+            // 自动开始OCR识别所有图片
+            processAllImages();
+        }
+
+        // 添加缩略图
+        function addThumbnail(file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const imageData = e.target.result;
+                const item = document.createElement('div');
+                item.className = 'thumbnail-item';
+                item.dataset.name = file.name;
+                item.dataset.image = imageData;
+                item.innerHTML = `
+                    <img src="${imageData}" alt="${file.name}" onclick="showImagePreview('${file.name}')">
+                    <button class="remove-btn" onclick="event.stopPropagation(); removeThumbnail('${file.name}')">×</button>
+                `;
+                item.addEventListener('click', (e) => {
+                    if (!e.target.classList.contains('remove-btn')) {
+                        showImagePreview(file.name);
+                    }
+                });
+                thumbnailsContainer.appendChild(item);
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // 显示图片预览
+        function showImagePreview(fileName) {
+            const thumb = thumbnailsContainer.querySelector(`[data-name="${fileName}"]`);
+            if (thumb) {
+                const imageData = thumb.dataset.image;
+                document.getElementById('previewImage').src = imageData;
+                document.getElementById('imagePreview').classList.add('show');
+            }
+        }
+
+        // 关闭图片预览
+        function closeImagePreview() {
+            document.getElementById('imagePreview').classList.remove('show');
+        }
+
+        // 点击遮罩关闭预览
+        document.getElementById('imagePreview').addEventListener('click', (e) => {
+            if (e.target.id === 'imagePreview') {
+                closeImagePreview();
+            }
+        });
+
+        // ESC 键关闭预览
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeImagePreview();
+            }
+        });
+
+        // 移除缩略图
+        function removeThumbnail(fileName) {
+            uploadedFiles = uploadedFiles.filter(f => f.name !== fileName);
+            const thumb = thumbnailsContainer.querySelector(`[data-name="${fileName}"]`);
+            if (thumb) thumb.remove();
+            
+            // 如果还有图片，重新识别
+            if (uploadedFiles.length > 0) {
+                processAllImages();
+            } else {
+                items = [];
+                renderResultList();
+            }
+        }
+
+        // 处理所有图片
+        async function processAllImages() {
+            const status = document.getElementById('status');
+            status.className = 'status loading';
+            status.innerHTML = '<div class="spinner"></div>正在识别中...';
+
+            const allTexts = [];
+
+            for (let i = 0; i < uploadedFiles.length; i++) {
+                try {
+                    const base64 = await fileToBase64(uploadedFiles[i]);
+                    const text = await performOCR(base64, i + 1, uploadedFiles.length);
+                    if (text) {
+                        allTexts.push(text);
+                    }
+                } catch (error) {
+                    console.error('OCR error for file:', uploadedFiles[i].name, error);
+                }
+            }
+
+            if (allTexts.length > 0) {
+                processOCRResult(allTexts.join('\n'));
+                status.className = 'status success';
+                status.textContent = `识别完成，共 ${items.length} 条内容`;
+            } else {
+                status.className = 'status error';
+                status.textContent = '识别失败，请重试';
+            }
+        }
+
+        // 文件转Base64
+        function fileToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (e) => resolve(e.target.result);
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+        }
+
+        // 检测文本中英文字符占比
+        function detectEnglishRatio(text) {
+            if (!text || text.trim().length === 0) return 0;
+            
+            const cleanText = text.replace(/\s+/g, ''); // 移除空格
+            if (cleanText.length === 0) return 0;
+            
+            // 英文字母数量（包括大小写）
+            const englishChars = (cleanText.match(/[a-zA-Z]/g) || []).length;
+            
+            // 计算占比
+            return englishChars / cleanText.length;
+        }
+
+        // OCR 识别 - 自动检测语言
+        async function performOCR(imageBase64, current, total) {
+            try {
+                const base64Data = imageBase64.split(',')[1];
+                
+                // 第一步：用英文识别，快速检测语言
+                const formData = new FormData();
+                formData.append('base64Image', 'data:image/png;base64,' + base64Data);
+                formData.append('apikey', 'K83524497588957');
+                formData.append('language', 'eng'); // 先用英文
+                formData.append('isOverlayRequired', 'false');
+                formData.append('OCREngine', '2');
+                
+                let response = await fetch('https://api.ocr.space/parse/image', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                let result = await response.json();
+                
+                if (result.OCRExitCode === 1 && result.ParsedResults && result.ParsedResults.length > 0) {
+                    const text = result.ParsedResults[0].ParsedText;
+                    const englishRatio = detectEnglishRatio(text);
+                    
+                    // 如果英文占比 >= 80%，直接返回结果
+                    if (englishRatio >= 0.8) {
+                        console.log(`检测为英文文档 (英文占比: ${(englishRatio * 100).toFixed(1)}%)`);
+                        return text;
+                    }
+                    
+                    // 如果英文占比 < 80%，用中文重新识别
+                    console.log(`检测为中文/混合文档 (英文占比: ${(englishRatio * 100).toFixed(1)}%)，重新识别...`);
+                    
+                    const formDataChs = new FormData();
+                    formDataChs.append('base64Image', 'data:image/png;base64,' + base64Data);
+                    formDataChs.append('apikey', 'K83524497588957');
+                    formDataChs.append('language', 'chs'); // 中文简体
+                    formDataChs.append('isOverlayRequired', 'false');
+                    formDataChs.append('OCREngine', '2');
+                    
+                    response = await fetch('https://api.ocr.space/parse/image', {
+                        method: 'POST',
+                        body: formDataChs
+                    });
+                    
+                    result = await response.json();
+                    
+                    if (result.OCRExitCode === 1 && result.ParsedResults && result.ParsedResults.length > 0) {
+                        return result.ParsedResults[0].ParsedText;
+                    }
+                }
+                
+                if (result.ErrorMessage) {
+                    console.error('OCR Error:', result.ErrorMessage);
+                }
+                return null;
+            } catch (error) {
+                console.error('OCR error:', error);
+                return null;
+            }
+        }
+
+        // 处理 OCR 结果
+        function processOCRResult(text) {
+            // 按行分割并过滤空行
+            let lines = text.split('\n')
+                .map(line => line.trim())
+                .filter(line => line.length > 0);
+            
+            // 去掉前面的序列号（如 "1. ", "2. ", "1、", "2、" 等）
+            lines = lines.map(line => {
+                return line.replace(/^[\d]+[.、\s]+/, '').trim();
+            }).filter(line => line.length > 0);
+            
+            items = lines;
+            currentIndex = 0;
+            
+            // 显示结果区域
+            document.getElementById('resultSection').classList.add('show');
+            renderResultList();
+            
+            // 启用播放按钮
+            document.getElementById('btnPlay').disabled = false;
+            document.getElementById('btnPrev').disabled = false;
+            document.getElementById('btnNext').disabled = false;
+            updateProgress();
+        }
+
+        // 渲染结果列表
+        function renderResultList() {
+            const list = document.getElementById('resultList');
+            list.innerHTML = items.map((item, index) => `
+                <div class="result-item ${index === currentIndex ? 'current-playing' : ''}" data-index="${index}">
+                    <span class="item-number">${index + 1}.</span>
+                    <input type="text" class="item-input" value="${item}" onchange="updateItem(${index}, this.value)">
+                    <button class="btn btn-speak" onclick="speakSingleItem(${index})" title="播放">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                            <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                        </svg>
+                    </button>
+                    <button class="btn btn-delete" onclick="deleteItem(${index})" title="删除">×</button>
+                </div>
+            `).join('');
+        }
+
+        // 单独播放某一条
+        function speakSingleItem(index) {
+            if (index < 0 || index >= items.length) return;
+            
+            const text = items[index];
+            const loopCount = parseInt(document.getElementById('loopCount').value);
+            
+            // 停止当前播放
+            if (currentAudio) {
+                currentAudio.pause();
+                currentAudio = null;
+            }
+            if (currentUtterance) {
+                speechSynth.cancel();
+            }
+            
+            // 循环播放
+            let currentLoop = 0;
+            const playLoop = () => {
+                if (currentLoop >= loopCount) return;
+                currentLoop++;
+                
+                speakText(text, () => {
+                    if (currentLoop < loopCount) {
+                        setTimeout(() => playLoop(), 500); // 循环间隔 0.5 秒
+                    }
+                });
+            };
+            
+            playLoop();
+        }
+
+        // 更新条目
+        function updateItem(index, value) {
+            items[index] = value;
+        }
+
+        // 添加条目
+        function addItem() {
+            items.push('');
+            renderResultList();
+            updateProgress();
+        }
+
+        // 删除条目
+        function deleteItem(index) {
+            items.splice(index, 1);
+            if (currentIndex >= items.length) {
+                currentIndex = Math.max(0, items.length - 1);
+            }
+            renderResultList();
+            updateProgress();
+        }
+
+        // 更新进度指示
+        function updateProgress() {
+            document.getElementById('currentIndex').textContent = currentIndex + 1;
+            document.getElementById('totalCount').textContent = items.length;
+            document.getElementById('progressIndicator').style.display = 'block';
+        }
+
+        // 播放/暂停
+        function togglePlay() {
+            if (isPlaying) {
+                stopPlay();
+            } else {
+                startPlay();
+            }
+        }
+
+        // 开始播放
+        function startPlay() {
+            if (items.length === 0) return;
+            
+            isPlaying = true;
+            document.getElementById('playIcon').textContent = '⏸';
+            document.getElementById('playText').textContent = '重新听写';
+            
+            playCurrentItem();
+        }
+
+        // 停止播放
+        function stopPlay() {
+            isPlaying = false;
+            document.getElementById('playIcon').textContent = '▶';
+            document.getElementById('playText').textContent = '开始听写';
+            
+            if (playTimeout) {
+                clearTimeout(playTimeout);
+                playTimeout = null;
+            }
+            
+            // 停止音频
+            if (currentAudio) {
+                currentAudio.pause();
+                currentAudio = null;
+            }
+            
+            // 停止浏览器内置 TTS
+            if (currentUtterance) {
+                speechSynth.cancel();
+            }
+        }
+
+        // 播放当前条目
+        function playCurrentItem() {
+            if (!isPlaying || currentIndex >= items.length) {
+                // 播放完成，重置
+                currentIndex = 0;
+                stopPlay();
+                renderResultList();
+                return;
+            }
+            
+            renderResultList();
+            updateProgress();
+            
+            const text = items[currentIndex];
+            const interval = parseInt(document.getElementById('intervalSlider').value) * 1000;
+            const loopCount = parseInt(document.getElementById('loopCount').value);
+            
+            // 3秒后开始播报
+            playTimeout = setTimeout(() => {
+                if (!isPlaying) return;
+                
+                // 循环播放当前条目
+                let currentLoop = 0;
+                const playLoop = () => {
+                    if (!isPlaying || currentLoop >= loopCount) {
+                        // 循环完成，播放下一个
+                        playTimeout = setTimeout(() => {
+                            currentIndex++;
+                            playCurrentItem();
+                        }, interval);
+                        return;
+                    }
+                    
+                    currentLoop++;
+                    speakText(text, () => {
+                        if (currentLoop < loopCount) {
+                            setTimeout(() => playLoop(), 500); // 循环间隔 0.5 秒
+                        } else {
+                            // 循环完成，播放下一个
+                            playTimeout = setTimeout(() => {
+                                currentIndex++;
+                                playCurrentItem();
+                            }, interval);
+                        }
+                    });
+                };
+                
+                playLoop();
+            }, 3000);
+        }
+
+        // 语音合成 - 使用 Google Translate TTS API (免费、自然)
+        let currentAudio = null;
+
+        function speakText(text, onEnd) {
+            // 停止当前播放
+            if (currentAudio) {
+                currentAudio.pause();
+                currentAudio = null;
+            }
+            
+            // 检测文本语言
+            const englishRatio = detectEnglishRatio(text);
+            const lang = englishRatio >= 0.8 ? 'en' : 'zh-CN';
+            
+            // 使用 Google Translate TTS API
+            const apiUrl = `https://translate.google.com/translate_tts?ie=UTF-8&tl=${lang}&client=tw-ob&q=${encodeURIComponent(text)}`;
+            
+            currentAudio = new Audio(apiUrl);
+            
+            currentAudio.onended = () => {
+                if (onEnd) onEnd();
+            };
+            
+            currentAudio.onerror = (e) => {
+                console.error('Google TTS error:', e);
+                // 回退到浏览器内置 TTS
+                fallbackSpeakText(text, onEnd);
+            };
+            
+            currentAudio.play().catch((e) => {
+                console.error('Audio play error:', e);
+                // 回退到浏览器内置 TTS
+                fallbackSpeakText(text, onEnd);
+            });
+        }
+
+        // 回退方案：浏览器内置 TTS (选择最好的声音)
+        async function fallbackSpeakText(text, onEnd) {
+            if (currentUtterance) {
+                speechSynth.cancel();
+            }
+            
+            // 等待语音列表加载完成
+            await new Promise(resolve => {
+                let voices = speechSynth.getVoices();
+                if (voices.length > 0) {
+                    resolve();
+                } else {
+                    speechSynth.onvoiceschanged = resolve;
+                }
+            });
+            
+            const voices = speechSynth.getVoices();
+            const englishRatio = detectEnglishRatio(text);
+            
+            currentUtterance = new SpeechSynthesisUtterance(text);
+            currentUtterance.lang = englishRatio >= 0.8 ? 'en-US' : 'zh-CN';
+            currentUtterance.rate = 0.9;
+            currentUtterance.pitch = 1;
+            currentUtterance.volume = 1;
+            
+            // 选择最好的声音（优先 Google 和 Microsoft 的神经网络声音）
+            const bestVoice = voices.find(voice => 
+                englishRatio >= 0.8 
+                    ? (voice.lang.includes('en-US') || voice.lang.includes('en-US')) && 
+                      (voice.name.includes('Google') || voice.name.includes('Microsoft') || voice.name.includes('Samantha'))
+                    : voice.lang.includes('zh-CN') && 
+                      (voice.name.includes('Google') || voice.name.includes('Microsoft') || voice.name.includes('Ting-Ting'))
+            );
+            
+            if (bestVoice) {
+                currentUtterance.voice = bestVoice;
+                console.log('使用声音:', bestVoice.name);
+            }
+            
+            currentUtterance.onend = () => {
+                if (onEnd) onEnd();
+            };
+            
+            currentUtterance.onerror = (e) => {
+                console.error('Speech error:', e);
+                if (onEnd) onEnd();
+            };
+            
+            speechSynth.speak(currentUtterance);
+        }
+
+        // 上一个
+        function prevItem() {
+            if (currentIndex > 0) {
+                currentIndex--;
+                renderResultList();
+                updateProgress();
+            }
+        }
+
+        // 下一个
+        function nextItem() {
+            if (currentIndex < items.length - 1) {
+                currentIndex++;
+                renderResultList();
+                updateProgress();
+            }
+        }
+
+        // 开始听写按钮
+        function startDictation() {
+            if (items.length === 0) {
+                return;
+            }
+            
+            document.getElementById('playerSection').scrollIntoView({ behavior: 'smooth' });
+            
+            setTimeout(() => {
+                startPlay();
+            }, 500);
+        }
+
+        // 页面卸载时清理
+        window.addEventListener('beforeunload', () => {
+            stopPlay();
+        });
+    </script>
+</body>
+</html>
