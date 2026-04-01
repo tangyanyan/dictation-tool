@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>自动听写工具</title>
+    <title>Dictation Tool</title>
     <style>
         * {
             margin: 0;
@@ -233,7 +233,7 @@
             to { transform: rotate(360deg); }
         }
 
-        /* 识别结果编辑区 */
+        /* Recognition Results编辑区 */
         .result-section {
             margin-bottom: 24px;
             display: none;
@@ -378,7 +378,7 @@
             background: hsl(217.2 91.2% 59.8% / 0.1);
         }
 
-        /* 播放控制区 */
+        /* Play控制区 */
         .player-section {
             background: hsl(var(--card));
             border-radius: var(--radius);
@@ -542,7 +542,7 @@
             }
         }
 
-        /* 滚动条样式 */
+        /* 滚动 items样式 */
         .result-list::-webkit-scrollbar {
             width: 6px;
         }
@@ -563,14 +563,14 @@
 </head>
 <body>
     <div class="container">
-        <h1>自动听写工具</h1>
-        <p class="subtitle">上传手写图片 → OCR识别 → 语音播报听写</p>
+        <h1>Dictation Tool</h1>
+        <p class="subtitle">Upload handwriting images → OCR recognition → Voice dictation</p>
 
         <!-- 上传区域 -->
         <div class="upload-section" id="uploadArea">
             <div class="upload-text">
-                点击或拖拽图片到此处上传<br>
-                支持多张图片，JPG/PNG 格式
+                Click or drag images here to upload<br>
+                Support multiple images, JPG/PNG formats
             </div>
             <div class="thumbnails-container" id="thumbnailsContainer"></div>
             <input type="file" id="fileInput" accept="image/*" multiple>
@@ -579,16 +579,16 @@
         <!-- 状态提示 -->
         <div class="status" id="status"></div>
 
-        <!-- 识别结果区域 -->
+        <!-- Recognition Results区域 -->
         <div class="result-section" id="resultSection">
             <div class="result-header">
-                <h2>识别结果</h2>
+                <h2>Recognition Results</h2>
                 <button class="btn btn-secondary" onclick="addItem()">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 6px;">
                         <line x1="12" y1="5" x2="12" y2="19"></line>
                         <line x1="5" y1="12" x2="19" y2="12"></line>
                     </svg>
-                    添加条目
+                    Add Entry
                 </button>
             </div>
             <div class="result-list" id="resultList"></div>
@@ -597,47 +597,47 @@
         <!-- 图片预览弹窗 -->
         <div class="image-preview-overlay" id="imagePreview">
             <button class="close-btn" onclick="closeImagePreview()">×</button>
-            <img id="previewImage" src="" alt="预览">
+            <img id="previewImage" src="" alt="Preview">
         </div>
 
-        <!-- 播放控制区 -->
+        <!-- Player Controls -->
         <div class="player-section" id="playerSection">
             <div class="progress-indicator" id="progressIndicator" style="display: none;">
-                准备播放第 <strong id="currentIndex">1</strong> / <strong id="totalCount">0</strong> 条
+                Preparing to play item  <strong id="currentIndex">1</strong> / <strong id="totalCount">0</strong>  items
             </div>
 
             <div class="player-controls">
-                <button class="btn btn-secondary btn-nav" onclick="prevItem()" id="btnPrev" disabled>上一个</button>
+                <button class="btn btn-secondary btn-nav" onclick="prevItem()" id="btnPrev" disabled>Previous</button>
                 <button class="btn btn-play" onclick="togglePlay()" id="btnPlay" disabled>
                     <span id="playIcon">▶</span>
-                    <span id="playText">开始听写</span>
+                    <span id="playText">Start Dictation</span>
                 </button>
-                <button class="btn btn-secondary btn-nav" onclick="nextItem()" id="btnNext" disabled>下一个</button>
+                <button class="btn btn-secondary btn-nav" onclick="nextItem()" id="btnNext" disabled>Next</button>
             </div>
 
-            <!-- 设置选项 -->
+            <!-- Settings -->
             <div style="display: flex; justify-content: center; align-items: center; gap: 24px; margin-top: 20px;">
-                <!-- 播放间隔 -->
+                <!-- Interval -->
                 <div style="display: flex; align-items: center; gap: 8px;">
-                    <label style="font-size: 13px; color: hsl(var(--muted-foreground));">播放间隔</label>
+                    <label style="font-size: 13px; color: hsl(var(--muted-foreground));">Interval</label>
                     <select id="intervalSlider" style="padding: 6px 12px; border-radius: 6px; background: hsl(var(--secondary)); color: hsl(var(--foreground)); border: 1px solid hsl(var(--border)); font-size: 13px; cursor: pointer;">
-                        <option value="5">5 秒</option>
-                        <option value="10" selected>10 秒</option>
-                        <option value="15">15 秒</option>
-                        <option value="20">20 秒</option>
-                        <option value="25">25 秒</option>
+                        <option value="5">5s</option>
+                        <option value="10" selected>10s</option>
+                        <option value="15">15s</option>
+                        <option value="20">20s</option>
+                        <option value="25">25s</option>
                     </select>
                 </div>
 
-                <!-- 循环次数 -->
+                <!-- Loop Count -->
                 <div style="display: flex; align-items: center; gap: 8px;">
-                    <label style="font-size: 13px; color: hsl(var(--muted-foreground));">循环次数</label>
+                    <label style="font-size: 13px; color: hsl(var(--muted-foreground));">Loop Count</label>
                     <select id="loopCount" style="padding: 6px 12px; border-radius: 6px; background: hsl(var(--secondary)); color: hsl(var(--foreground)); border: 1px solid hsl(var(--border)); font-size: 13px; cursor: pointer;">
-                        <option value="1">1 次</option>
-                        <option value="2">2 次</option>
-                        <option value="3">3 次</option>
-                        <option value="4">4 次</option>
-                        <option value="5">5 次</option>
+                        <option value="1">1x</option>
+                        <option value="2">2x</option>
+                        <option value="3">3x</option>
+                        <option value="4">4x</option>
+                        <option value="5">5x</option>
                     </select>
                 </div>
             </div>
@@ -646,8 +646,8 @@
     </div>
 
     <script>
-        // 全局状态
-        let uploadedFiles = []; // 存储上传的文件
+        // Global state
+        let uploadedFiles = []; // Store uploaded files
         let items = [];
         let currentIndex = 0;
         let isPlaying = false;
@@ -655,7 +655,7 @@
         let speechSynth = window.speechSynthesis;
         let currentUtterance = null;
 
-        // 文件上传
+        // File upload
         const uploadArea = document.getElementById('uploadArea');
         const fileInput = document.getElementById('fileInput');
         const thumbnailsContainer = document.getElementById('thumbnailsContainer');
@@ -690,7 +690,7 @@
             }
         });
 
-        // 处理多个文件
+        // Handle multiple files
         function handleFiles(files) {
             files.forEach(file => {
                 uploadedFiles.push(file);
@@ -701,7 +701,7 @@
             processAllImages();
         }
 
-        // 添加缩略图
+        // Add thumbnail
         function addThumbnail(file) {
             const reader = new FileReader();
             reader.onload = (e) => {
@@ -724,7 +724,7 @@
             reader.readAsDataURL(file);
         }
 
-        // 显示图片预览
+        // Show image preview
         function showImagePreview(fileName) {
             const thumb = thumbnailsContainer.querySelector(`[data-name="${fileName}"]`);
             if (thumb) {
@@ -734,32 +734,32 @@
             }
         }
 
-        // 关闭图片预览
+        // Close image preview
         function closeImagePreview() {
             document.getElementById('imagePreview').classList.remove('show');
         }
 
-        // 点击遮罩关闭预览
+        // Click overlay to close preview
         document.getElementById('imagePreview').addEventListener('click', (e) => {
             if (e.target.id === 'imagePreview') {
                 closeImagePreview();
             }
         });
 
-        // ESC 键关闭预览
+        // ESC key to close preview
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
                 closeImagePreview();
             }
         });
 
-        // 移除缩略图
+        // Remove thumbnail
         function removeThumbnail(fileName) {
             uploadedFiles = uploadedFiles.filter(f => f.name !== fileName);
             const thumb = thumbnailsContainer.querySelector(`[data-name="${fileName}"]`);
             if (thumb) thumb.remove();
             
-            // 如果还有图片，重新识别
+            // If images remain, re-recognize
             if (uploadedFiles.length > 0) {
                 processAllImages();
             } else {
@@ -768,11 +768,11 @@
             }
         }
 
-        // 处理所有图片
+        // Process all images
         async function processAllImages() {
             const status = document.getElementById('status');
             status.className = 'status loading';
-            status.innerHTML = '<div class="spinner"></div>正在识别中...';
+            status.innerHTML = '<div class="spinner"></div>Recognizing...';
 
             const allTexts = [];
 
@@ -791,14 +791,14 @@
             if (allTexts.length > 0) {
                 processOCRResult(allTexts.join('\n'));
                 status.className = 'status success';
-                status.textContent = `识别完成，共 ${items.length} 条内容`;
+                status.textContent = `Recognition completed with ${items.length}  items内容`;
             } else {
                 status.className = 'status error';
-                status.textContent = '识别失败，请重试';
+                status.textContent = 'Recognition failed, please retry';
             }
         }
 
-        // 文件转Base64
+        // File to Base64
         function fileToBase64(file) {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
@@ -808,30 +808,30 @@
             });
         }
 
-        // 检测文本中英文字符占比
+        // Detect English character ratio
         function detectEnglishRatio(text) {
             if (!text || text.trim().length === 0) return 0;
             
             const cleanText = text.replace(/\s+/g, ''); // 移除空格
             if (cleanText.length === 0) return 0;
             
-            // 英文字母数量（包括大小写）
+            // Count English letters (including uppercase and lowercase)
             const englishChars = (cleanText.match(/[a-zA-Z]/g) || []).length;
             
-            // 计算占比
+            // Calculate ratio
             return englishChars / cleanText.length;
         }
 
-        // OCR 识别 - 自动检测语言
+        // OCR recognition - Auto-detect language
         async function performOCR(imageBase64, current, total) {
             try {
                 const base64Data = imageBase64.split(',')[1];
                 
-                // 第一步：用英文识别，快速检测语言
+                // Step 1: Use English recognition to quickly detect language
                 const formData = new FormData();
                 formData.append('base64Image', 'data:image/png;base64,' + base64Data);
                 formData.append('apikey', 'K83524497588957');
-                formData.append('language', 'eng'); // 先用英文
+                formData.append('language', 'eng'); // First use English
                 formData.append('isOverlayRequired', 'false');
                 formData.append('OCREngine', '2');
                 
@@ -846,19 +846,19 @@
                     const text = result.ParsedResults[0].ParsedText;
                     const englishRatio = detectEnglishRatio(text);
                     
-                    // 如果英文占比 >= 80%，直接返回结果
+                    // 如果English ratio >= 80%，直接返回结果
                     if (englishRatio >= 0.8) {
-                        console.log(`检测为英文文档 (英文占比: ${(englishRatio * 100).toFixed(1)}%)`);
+                        console.log(`Detected English document (English ratio: ${(englishRatio * 100).toFixed(1)}%)`);
                         return text;
                     }
                     
-                    // 如果英文占比 < 80%，用中文重新识别
-                    console.log(`检测为中文/混合文档 (英文占比: ${(englishRatio * 100).toFixed(1)}%)，重新识别...`);
+                    // 如果English ratio < 80%，用中文重新识别
+                    console.log(`Detected Chinese/mixed document (English ratio: ${(englishRatio * 100).toFixed(1)}%)，Re-recognizing...`);
                     
                     const formDataChs = new FormData();
                     formDataChs.append('base64Image', 'data:image/png;base64,' + base64Data);
                     formDataChs.append('apikey', 'K83524497588957');
-                    formDataChs.append('language', 'chs'); // 中文简体
+                    formDataChs.append('language', 'chs'); // Simplified Chinese
                     formDataChs.append('isOverlayRequired', 'false');
                     formDataChs.append('OCREngine', '2');
                     
@@ -884,14 +884,14 @@
             }
         }
 
-        // 处理 OCR 结果
+        // Process OCR result
         function processOCRResult(text) {
-            // 按行分割并过滤空行
+            // Split by line and filter empty lines
             let lines = text.split('\n')
                 .map(line => line.trim())
                 .filter(line => line.length > 0);
             
-            // 去掉前面的序列号（如 "1. ", "2. ", "1、", "2、" 等）
+            // Remove leading sequence numbers（如 "1. ", "2. ", "1、", "2、" 等）
             lines = lines.map(line => {
                 return line.replace(/^[\d]+[.、\s]+/, '').trim();
             }).filter(line => line.length > 0);
@@ -899,43 +899,43 @@
             items = lines;
             currentIndex = 0;
             
-            // 显示结果区域
+            // Show result section
             document.getElementById('resultSection').classList.add('show');
             renderResultList();
             
-            // 启用播放按钮
+            // 启用Play按钮
             document.getElementById('btnPlay').disabled = false;
             document.getElementById('btnPrev').disabled = false;
             document.getElementById('btnNext').disabled = false;
             updateProgress();
         }
 
-        // 渲染结果列表
+        // Render result list
         function renderResultList() {
             const list = document.getElementById('resultList');
             list.innerHTML = items.map((item, index) => `
                 <div class="result-item ${index === currentIndex ? 'current-playing' : ''}" data-index="${index}">
                     <span class="item-number">${index + 1}.</span>
                     <input type="text" class="item-input" value="${item}" onchange="updateItem(${index}, this.value)">
-                    <button class="btn btn-speak" onclick="speakSingleItem(${index})" title="播放">
+                    <button class="btn btn-speak" onclick="speakSingleItem(${index})" title="Play">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
                             <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
                         </svg>
                     </button>
-                    <button class="btn btn-delete" onclick="deleteItem(${index})" title="删除">×</button>
+                    <button class="btn btn-delete" onclick="deleteItem(${index})" title="Delete">×</button>
                 </div>
             `).join('');
         }
 
-        // 单独播放某一条
+        // 单独Play某一 items
         function speakSingleItem(index) {
             if (index < 0 || index >= items.length) return;
             
             const text = items[index];
             const loopCount = parseInt(document.getElementById('loopCount').value);
             
-            // 停止当前播放
+            // 停止当前Play
             if (currentAudio) {
                 currentAudio.pause();
                 currentAudio = null;
@@ -944,7 +944,7 @@
                 speechSynth.cancel();
             }
             
-            // 循环播放
+            // 循环Play
             let currentLoop = 0;
             const playLoop = () => {
                 if (currentLoop >= loopCount) return;
@@ -952,7 +952,7 @@
                 
                 speakText(text, () => {
                     if (currentLoop < loopCount) {
-                        setTimeout(() => playLoop(), 500); // 循环间隔 0.5 秒
+                        setTimeout(() => playLoop(), 500); // Loop interval 0.5s
                     }
                 });
             };
@@ -960,19 +960,19 @@
             playLoop();
         }
 
-        // 更新条目
+        // 更新 items目
         function updateItem(index, value) {
             items[index] = value;
         }
 
-        // 添加条目
+        // Add Entry
         function addItem() {
             items.push('');
             renderResultList();
             updateProgress();
         }
 
-        // 删除条目
+        // Delete items目
         function deleteItem(index) {
             items.splice(index, 1);
             if (currentIndex >= items.length) {
@@ -982,14 +982,14 @@
             updateProgress();
         }
 
-        // 更新进度指示
+        // Update progress indicator
         function updateProgress() {
             document.getElementById('currentIndex').textContent = currentIndex + 1;
             document.getElementById('totalCount').textContent = items.length;
             document.getElementById('progressIndicator').style.display = 'block';
         }
 
-        // 播放/暂停
+        // Play/暂停
         function togglePlay() {
             if (isPlaying) {
                 stopPlay();
@@ -998,44 +998,44 @@
             }
         }
 
-        // 开始播放
+        // 开始Play
         function startPlay() {
             if (items.length === 0) return;
             
             isPlaying = true;
             document.getElementById('playIcon').textContent = '⏸';
-            document.getElementById('playText').textContent = '重新听写';
+            document.getElementById('playText').textContent = 'Restart';
             
             playCurrentItem();
         }
 
-        // 停止播放
+        // 停止Play
         function stopPlay() {
             isPlaying = false;
             document.getElementById('playIcon').textContent = '▶';
-            document.getElementById('playText').textContent = '开始听写';
+            document.getElementById('playText').textContent = 'Start Dictation';
             
             if (playTimeout) {
                 clearTimeout(playTimeout);
                 playTimeout = null;
             }
             
-            // 停止音频
+            // Stop audio
             if (currentAudio) {
                 currentAudio.pause();
                 currentAudio = null;
             }
             
-            // 停止浏览器内置 TTS
+            // Stop browser built-in TTS
             if (currentUtterance) {
                 speechSynth.cancel();
             }
         }
 
-        // 播放当前条目
+        // Play当前 items目
         function playCurrentItem() {
             if (!isPlaying || currentIndex >= items.length) {
-                // 播放完成，重置
+                // Play完成，重置
                 currentIndex = 0;
                 stopPlay();
                 renderResultList();
@@ -1049,15 +1049,15 @@
             const interval = parseInt(document.getElementById('intervalSlider').value) * 1000;
             const loopCount = parseInt(document.getElementById('loopCount').value);
             
-            // 3秒后开始播报
+            // Start speaking after 3s
             playTimeout = setTimeout(() => {
                 if (!isPlaying) return;
                 
-                // 循环播放当前条目
+                // 循环Play当前 items目
                 let currentLoop = 0;
                 const playLoop = () => {
                     if (!isPlaying || currentLoop >= loopCount) {
-                        // 循环完成，播放下一个
+                        // 循环完成，PlayNext
                         playTimeout = setTimeout(() => {
                             currentIndex++;
                             playCurrentItem();
@@ -1068,9 +1068,9 @@
                     currentLoop++;
                     speakText(text, () => {
                         if (currentLoop < loopCount) {
-                            setTimeout(() => playLoop(), 500); // 循环间隔 0.5 秒
+                            setTimeout(() => playLoop(), 500); // Loop interval 0.5s
                         } else {
-                            // 循环完成，播放下一个
+                            // 循环完成，PlayNext
                             playTimeout = setTimeout(() => {
                                 currentIndex++;
                                 playCurrentItem();
@@ -1083,11 +1083,11 @@
             }, 3000);
         }
 
-        // 语音合成 - 使用 Google Translate TTS API (免费、自然)
+        // Speech synthesis - Using Google Translate TTS API (free, natural)
         let currentAudio = null;
 
         function speakText(text, onEnd) {
-            // 停止当前播放
+            // 停止当前Play
             if (currentAudio) {
                 currentAudio.pause();
                 currentAudio = null;
@@ -1119,13 +1119,13 @@
             });
         }
 
-        // 回退方案：浏览器内置 TTS (选择最好的声音)
+        // Fallback: Browser built-in TTS (select best voice)
         async function fallbackSpeakText(text, onEnd) {
             if (currentUtterance) {
                 speechSynth.cancel();
             }
             
-            // 等待语音列表加载完成
+            // Wait for voice list to load
             await new Promise(resolve => {
                 let voices = speechSynth.getVoices();
                 if (voices.length > 0) {
@@ -1144,7 +1144,7 @@
             currentUtterance.pitch = 1;
             currentUtterance.volume = 1;
             
-            // 选择最好的声音（优先 Google 和 Microsoft 的神经网络声音）
+            // Select best voice (prioritize Google and Microsoft neural network voices)
             const bestVoice = voices.find(voice => 
                 englishRatio >= 0.8 
                     ? (voice.lang.includes('en-US') || voice.lang.includes('en-US')) && 
@@ -1155,7 +1155,7 @@
             
             if (bestVoice) {
                 currentUtterance.voice = bestVoice;
-                console.log('使用声音:', bestVoice.name);
+                console.log('Using voice:', bestVoice.name);
             }
             
             currentUtterance.onend = () => {
@@ -1170,7 +1170,7 @@
             speechSynth.speak(currentUtterance);
         }
 
-        // 上一个
+        // Previous
         function prevItem() {
             if (currentIndex > 0) {
                 currentIndex--;
@@ -1179,7 +1179,7 @@
             }
         }
 
-        // 下一个
+        // Next
         function nextItem() {
             if (currentIndex < items.length - 1) {
                 currentIndex++;
@@ -1188,7 +1188,7 @@
             }
         }
 
-        // 开始听写按钮
+        // Start Dictation按钮
         function startDictation() {
             if (items.length === 0) {
                 return;
@@ -1201,7 +1201,7 @@
             }, 500);
         }
 
-        // 页面卸载时清理
+        // Cleanup on page unload
         window.addEventListener('beforeunload', () => {
             stopPlay();
         });
