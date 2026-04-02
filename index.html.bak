@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Intelligent Transcription</title>
+    <title>自动听写工具</title>
     <style>
         * {
             margin: 0;
@@ -40,67 +40,6 @@
             color: hsl(var(--foreground));
             min-height: 100vh;
             padding: 40px 20px;
-            position: relative;
-            overflow-x: hidden;
-        }
-
-        /* Light Rays Background */
-        .light-rays-bg {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 300px;
-            height: 300px;
-            border-radius: 50%;
-            background: radial-gradient(circle, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.15) 30%, rgba(255,255,255,0) 70%);
-            box-shadow: 0 0 80px 30px rgba(255,255,255,0.25);
-            z-index: 0;
-            pointer-events: none;
-        }
-
-        .light-rays-bg::before,
-        .light-rays-bg::after {
-            content: "";
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 400%;
-            height: 2px;
-            background: linear-gradient(90deg, rgba(255,255,255,0.35) 0%, rgba(255,255,255,0) 100%);
-            transform-origin: left center;
-            animation: rotateRays 25s linear infinite;
-            box-shadow: 0 0 15px rgba(255,255,255,0.4);
-        }
-
-        .light-rays-bg::after {
-            width: 350%;
-            height: 1.5px;
-            animation: rotateRaysReverse 35s linear infinite;
-            animation-delay: -5s;
-        }
-
-        @keyframes rotateRays {
-            from {
-                transform: translateX(-50%) rotate(0deg);
-            }
-            to {
-                transform: translateX(-50%) rotate(360deg);
-            }
-        }
-
-        @keyframes rotateRaysReverse {
-            from {
-                transform: translateX(-50%) rotate(360deg);
-            }
-            to {
-                transform: translateX(-50%) rotate(0deg);
-            }
-        }
-
-        .container {
-            position: relative;
-            z-index: 1;
         }
 
         .container {
@@ -119,151 +58,36 @@
         .subtitle {
             text-align: center;
             color: hsl(var(--muted-foreground));
-            margin-bottom: 72px;
-            font-size: 12px;
+            margin-bottom: 32px;
+            font-size: 14px;
         }
 
         /* 上传区域 */
         .upload-section {
-            --transition: 350ms;
-            --folder-W: 120px;
-            --folder-H: 80px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: flex-end;
-            padding: 20px;
-            background: linear-gradient(135deg, #f162ba, #ed45ae);
-            border-radius: 20px;
-            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
-            height: calc(var(--folder-H) * 1.7);
-            width: 240px;
-            margin: 0 auto 24px auto;
-            border: none;
+            border: 2px dashed hsl(var(--border));
+            border-radius: var(--radius);
+            padding: 32px;
+            text-align: center;
+            background: hsl(var(--card));
+            transition: all 0.2s ease;
             cursor: pointer;
-            transition: all var(--transition) ease;
-            position: relative;
+            margin-bottom: 24px;
         }
 
         .upload-section:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            border-color: hsl(var(--ring));
+            background: hsl(var(--accent));
         }
 
         .upload-section.dragover {
-            background: linear-gradient(135deg, #ff7ed4, #ff5cb8);
-            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.4);
-        }
-
-        .folder {
-            position: absolute;
-            top: 5px;
-            left: calc(50% - 60px);
-            animation: float 2.5s infinite ease-in-out;
-            transition: transform var(--transition) ease;
-            pointer-events: none;
-        }
-
-        .folder:hover {
-            transform: scale(1.05);
-        }
-
-        .folder .front-side,
-        .folder .back-side {
-            position: absolute;
-            transition: transform var(--transition);
-            transform-origin: bottom center;
-            top: 0;
-            left: 0;
-        }
-
-        .folder .back-side::before,
-        .folder .back-side::after {
-            content: "";
-            display: block;
-            background-color: white;
-            opacity: 0.5;
-            width: var(--folder-W);
-            height: var(--folder-H);
-            position: absolute;
-            top: 0;
-            left: 0;
-            transform-origin: bottom center;
-            border-radius: 15px;
-            transition: transform 350ms;
-            z-index: 0;
-        }
-
-        .upload-section:hover .back-side::before {
-            transform: rotateX(-5deg) skewX(5deg);
-        }
-        
-        .upload-section:hover .back-side::after {
-            transform: rotateX(-15deg) skewX(12deg);
-        }
-
-        .folder .front-side {
-            z-index: 1;
-        }
-
-        .upload-section:hover .front-side {
-            transform: rotateX(-40deg) skewX(15deg);
-        }
-
-        .folder .tip {
-            background: linear-gradient(135deg, #ff9a56, #ff6f56);
-            width: 80px;
-            height: 20px;
-            border-radius: 12px 12px 0 0;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-            position: absolute;
-            top: -10px;
-            left: 0;
-            z-index: 2;
-        }
-
-        .folder .cover {
-            background: linear-gradient(135deg, #ffe563, #ffc663);
-            width: var(--folder-W);
-            height: var(--folder-H);
-            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
-            border-radius: 10px;
+            border-color: hsl(var(--ring));
+            background: hsl(var(--accent));
         }
 
         .upload-text {
-            font-size: 1.1em;
-            color: #ffffff;
-            text-align: center;
-            background: rgba(255, 255, 255, 0.2);
-            border: none;
-            border-radius: 10px;
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
-            transition: background var(--transition) ease;
-            display: inline-block;
-            width: 100%;
-            padding: 10px 35px;
-            position: relative;
-            z-index: 10;
-            pointer-events: none;
-            line-height: 1.4;
-        }
-
-        .upload-section:hover .upload-text {
-            background: rgba(255, 255, 255, 0.4);
-        }
-
-        @keyframes float {
-            0% {
-                transform: translateY(0px);
-            }
-
-            50% {
-                transform: translateY(-20px);
-            }
-
-            100% {
-                transform: translateY(0px);
-            }
+            color: hsl(var(--muted-foreground));
+            font-size: 14px;
+            line-height: 1.6;
         }
 
         #fileInput {
@@ -275,9 +99,7 @@
             display: flex;
             flex-wrap: wrap;
             gap: 12px;
-            margin-bottom: 24px;
-            justify-content: center;
-            max-width: 900px;
+            margin-top: 20px;
         }
 
         .thumbnail-item {
@@ -411,7 +233,7 @@
             to { transform: rotate(360deg); }
         }
 
-        /* Recognition Results编辑区 */
+        /* 识别结果编辑区 */
         .result-section {
             margin-bottom: 24px;
             display: none;
@@ -556,7 +378,7 @@
             background: hsl(217.2 91.2% 59.8% / 0.1);
         }
 
-        /* Play控制区 */
+        /* 播放控制区 */
         .player-section {
             background: hsl(var(--card));
             border-radius: var(--radius);
@@ -585,51 +407,37 @@
         }
 
         .btn-play {
-            width: 140px;
-            height: 56px;
-            border-radius: 50px;
-            background-image: linear-gradient(135deg, #feb692 0%, #ea5455 100%);
-            box-shadow: 0 20px 30px -6px rgba(238, 103, 97, 0.5);
-            border: none;
-            cursor: pointer;
-            color: white;
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: hsl(var(--primary));
+            color: hsl(var(--primary-foreground));
             font-size: 24px;
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
-            transition: all 0.3s ease-in-out;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            gap: 4px;
+            transition: all 0.2s ease;
         }
 
         .btn-play #playIcon {
             font-size: 28px;
         }
 
-        .btn-play-text {
-            position: absolute;
-            bottom: -32px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 13px;
+        .btn-play #playText {
+            font-size: 11px;
             font-weight: 500;
-            color: hsl(var(--muted-foreground));
-            white-space: nowrap;
         }
 
         .btn-play:hover {
-            transform: translateY(3px);
-            box-shadow: none;
-        }
-
-        .btn-play:active {
-            opacity: 0.5;
+            transform: scale(1.05);
         }
 
         .btn-play:disabled {
             opacity: 0.4;
             cursor: not-allowed;
             transform: none;
-            box-shadow: none;
         }
 
         .btn-nav {
@@ -734,7 +542,7 @@
             }
         }
 
-        /* 滚动 items样式 */
+        /* 滚动条样式 */
         .result-list::-webkit-scrollbar {
             width: 6px;
         }
@@ -751,96 +559,36 @@
         .result-list::-webkit-scrollbar-thumb:hover {
             background: hsl(var(--muted-foreground));
         }
-
-        /* Shadcn/ui style select wrapper */
-        .select-wrapper {
-            position: relative;
-            display: inline-flex;
-            align-items: center;
-        }
-
-        .select-wrapper select {
-            appearance: none;
-            -webkit-appearance: none;
-            -moz-appearance: none;
-            padding: 8px 36px 8px 12px;
-            padding-right: 36px;
-            border-radius: 6px;
-            background: hsl(var(--background));
-            color: hsl(var(--foreground));
-            border: 1px solid hsl(var(--border));
-            font-size: 13px;
-            cursor: pointer;
-            transition: all 0.2s;
-            min-width: 80px;
-        }
-
-        .select-wrapper select:hover {
-            border-color: hsl(var(--ring));
-        }
-
-        .select-wrapper select:focus {
-            outline: none;
-            border-color: hsl(var(--ring));
-            box-shadow: 0 0 0 2px hsl(var(--ring) / 0.2);
-        }
-
-        .select-wrapper select:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        .select-icon {
-            position: absolute;
-            right: 10px;
-            pointer-events: none;
-            color: hsl(var(--muted-foreground));
-            transition: transform 0.2s;
-        }
-
-        .select-wrapper:hover .select-icon {
-            color: hsl(var(--foreground));
-        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Intelligent Transcription</h1>
-        <p class="subtitle">Upload handwriting images → OCR recognition → Voice dictation</p>
+        <h1>自动听写工具</h1>
+        <p class="subtitle">上传手写图片 → OCR识别 → 语音播报听写</p>
 
         <!-- 上传区域 -->
         <div class="upload-section" id="uploadArea">
-            <div class="folder">
-                <div class="back-side">
-                    <div class="cover"></div>
-                </div>
-                <div class="front-side">
-                    <div class="tip"></div>
-                    <div class="cover"></div>
-                </div>
-            </div>
             <div class="upload-text">
-                Upload a File
+                点击或拖拽图片到此处上传<br>
+                支持多张图片，JPG/PNG 格式
             </div>
+            <div class="thumbnails-container" id="thumbnailsContainer"></div>
             <input type="file" id="fileInput" accept="image/*" multiple>
         </div>
-
-        <!-- 缩略图容器 -->
-        <div class="thumbnails-container" id="thumbnailsContainer"></div>
 
         <!-- 状态提示 -->
         <div class="status" id="status"></div>
 
-        <!-- Recognition Results区域 -->
+        <!-- 识别结果区域 -->
         <div class="result-section" id="resultSection">
             <div class="result-header">
-                <h2>Recognition Results</h2>
+                <h2>识别结果</h2>
                 <button class="btn btn-secondary" onclick="addItem()">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 6px;">
                         <line x1="12" y1="5" x2="12" y2="19"></line>
                         <line x1="5" y1="12" x2="19" y2="12"></line>
                     </svg>
-                    Add Entry
+                    添加条目
                 </button>
             </div>
             <div class="result-list" id="resultList"></div>
@@ -849,70 +597,48 @@
         <!-- 图片预览弹窗 -->
         <div class="image-preview-overlay" id="imagePreview">
             <button class="close-btn" onclick="closeImagePreview()">×</button>
-            <img id="previewImage" src="" alt="Preview">
+            <img id="previewImage" src="" alt="预览">
         </div>
 
-        <!-- Player Controls -->
+        <!-- 播放控制区 -->
         <div class="player-section" id="playerSection">
             <div class="progress-indicator" id="progressIndicator" style="display: none;">
-                Preparing to play item  <strong id="currentIndex">1</strong> / <strong id="totalCount">0</strong>  items
+                准备播放第 <strong id="currentIndex">1</strong> / <strong id="totalCount">0</strong> 条
             </div>
 
             <div class="player-controls">
-                <button class="btn btn-secondary btn-nav" onclick="prevItem()" id="btnPrev" disabled>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 6px; vertical-align: middle;">
-                        <polyline points="15 18 9 12 15 6"></polyline>
-                    </svg>
-                    <span style="vertical-align: middle;">Previous</span>
+                <button class="btn btn-secondary btn-nav" onclick="prevItem()" id="btnPrev" disabled>上一个</button>
+                <button class="btn btn-play" onclick="togglePlay()" id="btnPlay" disabled>
+                    <span id="playIcon">▶</span>
+                    <span id="playText">开始听写</span>
                 </button>
-                <div style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
-                    <button class="btn btn-play" onclick="togglePlay()" id="btnPlay" disabled>
-                        <span id="playIcon">▶</span>
-                    </button>
-                    <span class="btn-play-text" id="playText">Start Dictation</span>
-                </div>
-                <button class="btn btn-secondary btn-nav" onclick="nextItem()" id="btnNext" disabled>
-                    <span style="vertical-align: middle;">Next</span>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-left: 6px; vertical-align: middle;">
-                        <polyline points="9 18 15 12 9 6"></polyline>
-                    </svg>
-                </button>
+                <button class="btn btn-secondary btn-nav" onclick="nextItem()" id="btnNext" disabled>下一个</button>
             </div>
 
-            <!-- Settings -->
+            <!-- 设置选项 -->
             <div style="display: flex; justify-content: center; align-items: center; gap: 24px; margin-top: 20px;">
-                <!-- Interval -->
+                <!-- 播放间隔 -->
                 <div style="display: flex; align-items: center; gap: 8px;">
-                    <label style="font-size: 13px; color: hsl(var(--muted-foreground));">Interval</label>
-                    <div class="select-wrapper">
-                        <select id="intervalSlider">
-                            <option value="5">5s</option>
-                            <option value="10" selected>10s</option>
-                            <option value="15">15s</option>
-                            <option value="20">20s</option>
-                            <option value="25">25s</option>
-                        </select>
-                        <svg class="select-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <polyline points="6 9 12 15 18 9"></polyline>
-                        </svg>
-                    </div>
+                    <label style="font-size: 13px; color: hsl(var(--muted-foreground));">播放间隔</label>
+                    <select id="intervalSlider" style="padding: 6px 12px; border-radius: 6px; background: hsl(var(--secondary)); color: hsl(var(--foreground)); border: 1px solid hsl(var(--border)); font-size: 13px; cursor: pointer;">
+                        <option value="5">5 秒</option>
+                        <option value="10" selected>10 秒</option>
+                        <option value="15">15 秒</option>
+                        <option value="20">20 秒</option>
+                        <option value="25">25 秒</option>
+                    </select>
                 </div>
 
-                <!-- Loop Count -->
+                <!-- 循环次数 -->
                 <div style="display: flex; align-items: center; gap: 8px;">
-                    <label style="font-size: 13px; color: hsl(var(--muted-foreground));">Loop Count</label>
-                    <div class="select-wrapper">
-                        <select id="loopCount">
-                            <option value="1">1x</option>
-                            <option value="2">2x</option>
-                            <option value="3">3x</option>
-                            <option value="4">4x</option>
-                            <option value="5">5x</option>
-                        </select>
-                        <svg class="select-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <polyline points="6 9 12 15 18 9"></polyline>
-                        </svg>
-                    </div>
+                    <label style="font-size: 13px; color: hsl(var(--muted-foreground));">循环次数</label>
+                    <select id="loopCount" style="padding: 6px 12px; border-radius: 6px; background: hsl(var(--secondary)); color: hsl(var(--foreground)); border: 1px solid hsl(var(--border)); font-size: 13px; cursor: pointer;">
+                        <option value="1">1 次</option>
+                        <option value="2">2 次</option>
+                        <option value="3">3 次</option>
+                        <option value="4">4 次</option>
+                        <option value="5">5 次</option>
+                    </select>
                 </div>
             </div>
             </div>
@@ -920,8 +646,8 @@
     </div>
 
     <script>
-        // Global state
-        let uploadedFiles = []; // Store uploaded files
+        // 全局状态
+        let uploadedFiles = []; // 存储上传的文件
         let items = [];
         let currentIndex = 0;
         let isPlaying = false;
@@ -929,7 +655,7 @@
         let speechSynth = window.speechSynthesis;
         let currentUtterance = null;
 
-        // File upload
+        // 文件上传
         const uploadArea = document.getElementById('uploadArea');
         const fileInput = document.getElementById('fileInput');
         const thumbnailsContainer = document.getElementById('thumbnailsContainer');
@@ -964,7 +690,7 @@
             }
         });
 
-        // Handle multiple files
+        // 处理多个文件
         function handleFiles(files) {
             files.forEach(file => {
                 uploadedFiles.push(file);
@@ -975,7 +701,7 @@
             processAllImages();
         }
 
-        // Add thumbnail
+        // 添加缩略图
         function addThumbnail(file) {
             const reader = new FileReader();
             reader.onload = (e) => {
@@ -998,7 +724,7 @@
             reader.readAsDataURL(file);
         }
 
-        // Show image preview
+        // 显示图片预览
         function showImagePreview(fileName) {
             const thumb = thumbnailsContainer.querySelector(`[data-name="${fileName}"]`);
             if (thumb) {
@@ -1008,32 +734,32 @@
             }
         }
 
-        // Close image preview
+        // 关闭图片预览
         function closeImagePreview() {
             document.getElementById('imagePreview').classList.remove('show');
         }
 
-        // Click overlay to close preview
+        // 点击遮罩关闭预览
         document.getElementById('imagePreview').addEventListener('click', (e) => {
             if (e.target.id === 'imagePreview') {
                 closeImagePreview();
             }
         });
 
-        // ESC key to close preview
+        // ESC 键关闭预览
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
                 closeImagePreview();
             }
         });
 
-        // Remove thumbnail
+        // 移除缩略图
         function removeThumbnail(fileName) {
             uploadedFiles = uploadedFiles.filter(f => f.name !== fileName);
             const thumb = thumbnailsContainer.querySelector(`[data-name="${fileName}"]`);
             if (thumb) thumb.remove();
             
-            // If images remain, re-recognize
+            // 如果还有图片，重新识别
             if (uploadedFiles.length > 0) {
                 processAllImages();
             } else {
@@ -1042,11 +768,11 @@
             }
         }
 
-        // Process all images
+        // 处理所有图片
         async function processAllImages() {
             const status = document.getElementById('status');
             status.className = 'status loading';
-            status.innerHTML = '<div class="spinner"></div>Recognizing...';
+            status.innerHTML = '<div class="spinner"></div>正在识别中...';
 
             const allTexts = [];
 
@@ -1065,14 +791,14 @@
             if (allTexts.length > 0) {
                 processOCRResult(allTexts.join('\n'));
                 status.className = 'status success';
-                status.textContent = `Recognition completed with ${items.length}  items内容`;
+                status.textContent = `识别完成，共 ${items.length} 条内容`;
             } else {
                 status.className = 'status error';
-                status.textContent = 'Recognition failed, please retry';
+                status.textContent = '识别失败，请重试';
             }
         }
 
-        // File to Base64
+        // 文件转Base64
         function fileToBase64(file) {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
@@ -1082,30 +808,30 @@
             });
         }
 
-        // Detect English character ratio
+        // 检测文本中英文字符占比
         function detectEnglishRatio(text) {
             if (!text || text.trim().length === 0) return 0;
             
             const cleanText = text.replace(/\s+/g, ''); // 移除空格
             if (cleanText.length === 0) return 0;
             
-            // Count English letters (including uppercase and lowercase)
+            // 英文字母数量（包括大小写）
             const englishChars = (cleanText.match(/[a-zA-Z]/g) || []).length;
             
-            // Calculate ratio
+            // 计算占比
             return englishChars / cleanText.length;
         }
 
-        // OCR recognition - Auto-detect language
+        // OCR 识别 - 自动检测语言
         async function performOCR(imageBase64, current, total) {
             try {
                 const base64Data = imageBase64.split(',')[1];
                 
-                // Step 1: Use English recognition to quickly detect language
+                // 第一步：用英文识别，快速检测语言
                 const formData = new FormData();
                 formData.append('base64Image', 'data:image/png;base64,' + base64Data);
                 formData.append('apikey', 'K83524497588957');
-                formData.append('language', 'eng'); // First use English
+                formData.append('language', 'eng'); // 先用英文
                 formData.append('isOverlayRequired', 'false');
                 formData.append('OCREngine', '2');
                 
@@ -1120,19 +846,19 @@
                     const text = result.ParsedResults[0].ParsedText;
                     const englishRatio = detectEnglishRatio(text);
                     
-                    // 如果English ratio >= 80%，直接返回结果
+                    // 如果英文占比 >= 80%，直接返回结果
                     if (englishRatio >= 0.8) {
-                        console.log(`Detected English document (English ratio: ${(englishRatio * 100).toFixed(1)}%)`);
+                        console.log(`检测为英文文档 (英文占比: ${(englishRatio * 100).toFixed(1)}%)`);
                         return text;
                     }
                     
-                    // 如果English ratio < 80%，用中文重新识别
-                    console.log(`Detected Chinese/mixed document (English ratio: ${(englishRatio * 100).toFixed(1)}%)，Re-recognizing...`);
+                    // 如果英文占比 < 80%，用中文重新识别
+                    console.log(`检测为中文/混合文档 (英文占比: ${(englishRatio * 100).toFixed(1)}%)，重新识别...`);
                     
                     const formDataChs = new FormData();
                     formDataChs.append('base64Image', 'data:image/png;base64,' + base64Data);
                     formDataChs.append('apikey', 'K83524497588957');
-                    formDataChs.append('language', 'chs'); // Simplified Chinese
+                    formDataChs.append('language', 'chs'); // 中文简体
                     formDataChs.append('isOverlayRequired', 'false');
                     formDataChs.append('OCREngine', '2');
                     
@@ -1158,14 +884,14 @@
             }
         }
 
-        // Process OCR result
+        // 处理 OCR 结果
         function processOCRResult(text) {
-            // Split by line and filter empty lines
+            // 按行分割并过滤空行
             let lines = text.split('\n')
                 .map(line => line.trim())
                 .filter(line => line.length > 0);
             
-            // Remove leading sequence numbers（如 "1. ", "2. ", "1、", "2、" 等）
+            // 去掉前面的序列号（如 "1. ", "2. ", "1、", "2、" 等）
             lines = lines.map(line => {
                 return line.replace(/^[\d]+[.、\s]+/, '').trim();
             }).filter(line => line.length > 0);
@@ -1173,43 +899,43 @@
             items = lines;
             currentIndex = 0;
             
-            // Show result section
+            // 显示结果区域
             document.getElementById('resultSection').classList.add('show');
             renderResultList();
             
-            // 启用Play按钮
+            // 启用播放按钮
             document.getElementById('btnPlay').disabled = false;
             document.getElementById('btnPrev').disabled = false;
             document.getElementById('btnNext').disabled = false;
             updateProgress();
         }
 
-        // Render result list
+        // 渲染结果列表
         function renderResultList() {
             const list = document.getElementById('resultList');
             list.innerHTML = items.map((item, index) => `
                 <div class="result-item ${index === currentIndex ? 'current-playing' : ''}" data-index="${index}">
                     <span class="item-number">${index + 1}.</span>
                     <input type="text" class="item-input" value="${item}" onchange="updateItem(${index}, this.value)">
-                    <button class="btn btn-speak" onclick="speakSingleItem(${index})" title="Play">
+                    <button class="btn btn-speak" onclick="speakSingleItem(${index})" title="播放">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
                             <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
                         </svg>
                     </button>
-                    <button class="btn btn-delete" onclick="deleteItem(${index})" title="Delete">×</button>
+                    <button class="btn btn-delete" onclick="deleteItem(${index})" title="删除">×</button>
                 </div>
             `).join('');
         }
 
-        // 单独Play某一 items
+        // 单独播放某一条
         function speakSingleItem(index) {
             if (index < 0 || index >= items.length) return;
             
             const text = items[index];
             const loopCount = parseInt(document.getElementById('loopCount').value);
             
-            // 停止当前Play
+            // 停止当前播放
             if (currentAudio) {
                 currentAudio.pause();
                 currentAudio = null;
@@ -1218,7 +944,7 @@
                 speechSynth.cancel();
             }
             
-            // 循环Play
+            // 循环播放
             let currentLoop = 0;
             const playLoop = () => {
                 if (currentLoop >= loopCount) return;
@@ -1226,7 +952,7 @@
                 
                 speakText(text, () => {
                     if (currentLoop < loopCount) {
-                        setTimeout(() => playLoop(), 500); // Loop interval 0.5s
+                        setTimeout(() => playLoop(), 500); // 循环间隔 0.5 秒
                     }
                 });
             };
@@ -1234,19 +960,19 @@
             playLoop();
         }
 
-        // 更新 items目
+        // 更新条目
         function updateItem(index, value) {
             items[index] = value;
         }
 
-        // Add Entry
+        // 添加条目
         function addItem() {
             items.push('');
             renderResultList();
             updateProgress();
         }
 
-        // Delete items目
+        // 删除条目
         function deleteItem(index) {
             items.splice(index, 1);
             if (currentIndex >= items.length) {
@@ -1256,14 +982,14 @@
             updateProgress();
         }
 
-        // Update progress indicator
+        // 更新进度指示
         function updateProgress() {
             document.getElementById('currentIndex').textContent = currentIndex + 1;
             document.getElementById('totalCount').textContent = items.length;
             document.getElementById('progressIndicator').style.display = 'block';
         }
 
-        // Play/暂停
+        // 播放/暂停
         function togglePlay() {
             if (isPlaying) {
                 stopPlay();
@@ -1272,44 +998,44 @@
             }
         }
 
-        // 开始Play
+        // 开始播放
         function startPlay() {
             if (items.length === 0) return;
             
             isPlaying = true;
             document.getElementById('playIcon').textContent = '⏸';
-            document.getElementById('playText').textContent = 'Restart';
+            document.getElementById('playText').textContent = '重新听写';
             
             playCurrentItem();
         }
 
-        // 停止Play
+        // 停止播放
         function stopPlay() {
             isPlaying = false;
             document.getElementById('playIcon').textContent = '▶';
-            document.getElementById('playText').textContent = 'Start Dictation';
+            document.getElementById('playText').textContent = '开始听写';
             
             if (playTimeout) {
                 clearTimeout(playTimeout);
                 playTimeout = null;
             }
             
-            // Stop audio
+            // 停止音频
             if (currentAudio) {
                 currentAudio.pause();
                 currentAudio = null;
             }
             
-            // Stop browser built-in TTS
+            // 停止浏览器内置 TTS
             if (currentUtterance) {
                 speechSynth.cancel();
             }
         }
 
-        // Play当前 items目
+        // 播放当前条目
         function playCurrentItem() {
             if (!isPlaying || currentIndex >= items.length) {
-                // Play完成，重置
+                // 播放完成，重置
                 currentIndex = 0;
                 stopPlay();
                 renderResultList();
@@ -1323,15 +1049,15 @@
             const interval = parseInt(document.getElementById('intervalSlider').value) * 1000;
             const loopCount = parseInt(document.getElementById('loopCount').value);
             
-            // Start speaking after 3s
+            // 3秒后开始播报
             playTimeout = setTimeout(() => {
                 if (!isPlaying) return;
                 
-                // 循环Play当前 items目
+                // 循环播放当前条目
                 let currentLoop = 0;
                 const playLoop = () => {
                     if (!isPlaying || currentLoop >= loopCount) {
-                        // 循环完成，PlayNext
+                        // 循环完成，播放下一个
                         playTimeout = setTimeout(() => {
                             currentIndex++;
                             playCurrentItem();
@@ -1342,9 +1068,9 @@
                     currentLoop++;
                     speakText(text, () => {
                         if (currentLoop < loopCount) {
-                            setTimeout(() => playLoop(), 500); // Loop interval 0.5s
+                            setTimeout(() => playLoop(), 500); // 循环间隔 0.5 秒
                         } else {
-                            // 循环完成，PlayNext
+                            // 循环完成，播放下一个
                             playTimeout = setTimeout(() => {
                                 currentIndex++;
                                 playCurrentItem();
@@ -1357,11 +1083,11 @@
             }, 3000);
         }
 
-        // Speech synthesis - Using Google Translate TTS API (free, natural)
+        // 语音合成 - 使用 Google Translate TTS API (免费、自然)
         let currentAudio = null;
 
         function speakText(text, onEnd) {
-            // 停止当前Play
+            // 停止当前播放
             if (currentAudio) {
                 currentAudio.pause();
                 currentAudio = null;
@@ -1393,13 +1119,13 @@
             });
         }
 
-        // Fallback: Browser built-in TTS (select best voice)
+        // 回退方案：浏览器内置 TTS (选择最好的声音)
         async function fallbackSpeakText(text, onEnd) {
             if (currentUtterance) {
                 speechSynth.cancel();
             }
             
-            // Wait for voice list to load
+            // 等待语音列表加载完成
             await new Promise(resolve => {
                 let voices = speechSynth.getVoices();
                 if (voices.length > 0) {
@@ -1418,7 +1144,7 @@
             currentUtterance.pitch = 1;
             currentUtterance.volume = 1;
             
-            // Select best voice (prioritize Google and Microsoft neural network voices)
+            // 选择最好的声音（优先 Google 和 Microsoft 的神经网络声音）
             const bestVoice = voices.find(voice => 
                 englishRatio >= 0.8 
                     ? (voice.lang.includes('en-US') || voice.lang.includes('en-US')) && 
@@ -1429,7 +1155,7 @@
             
             if (bestVoice) {
                 currentUtterance.voice = bestVoice;
-                console.log('Using voice:', bestVoice.name);
+                console.log('使用声音:', bestVoice.name);
             }
             
             currentUtterance.onend = () => {
@@ -1444,7 +1170,7 @@
             speechSynth.speak(currentUtterance);
         }
 
-        // Previous
+        // 上一个
         function prevItem() {
             if (currentIndex > 0) {
                 currentIndex--;
@@ -1453,7 +1179,7 @@
             }
         }
 
-        // Next
+        // 下一个
         function nextItem() {
             if (currentIndex < items.length - 1) {
                 currentIndex++;
@@ -1462,7 +1188,7 @@
             }
         }
 
-        // Start Dictation按钮
+        // 开始听写按钮
         function startDictation() {
             if (items.length === 0) {
                 return;
@@ -1475,7 +1201,7 @@
             }, 500);
         }
 
-        // Cleanup on page unload
+        // 页面卸载时清理
         window.addEventListener('beforeunload', () => {
             stopPlay();
         });
