@@ -58,36 +58,151 @@
         .subtitle {
             text-align: center;
             color: hsl(var(--muted-foreground));
-            margin-bottom: 32px;
+            margin-bottom: 72px;
             font-size: 14px;
         }
 
         /* 上传区域 */
         .upload-section {
-            border: 2px dashed hsl(var(--border));
-            border-radius: var(--radius);
-            padding: 32px;
-            text-align: center;
-            background: hsl(var(--card));
-            transition: all 0.2s ease;
+            --transition: 350ms;
+            --folder-W: 120px;
+            --folder-H: 80px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+            padding: 20px;
+            background: linear-gradient(135deg, #f162ba, #ed45ae);
+            border-radius: 20px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+            height: calc(var(--folder-H) * 1.7);
+            width: 280px;
+            margin: 0 auto 24px auto;
+            border: none;
             cursor: pointer;
-            margin-bottom: 24px;
+            transition: all var(--transition) ease;
+            position: relative;
         }
 
         .upload-section:hover {
-            border-color: hsl(var(--ring));
-            background: hsl(var(--accent));
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
         }
 
         .upload-section.dragover {
-            border-color: hsl(var(--ring));
-            background: hsl(var(--accent));
+            background: linear-gradient(135deg, #ff7ed4, #ff5cb8);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.4);
+        }
+
+        .folder {
+            position: absolute;
+            top: -25px;
+            left: calc(50% - 60px);
+            animation: float 2.5s infinite ease-in-out;
+            transition: transform var(--transition) ease;
+            pointer-events: none;
+        }
+
+        .folder:hover {
+            transform: scale(1.05);
+        }
+
+        .folder .front-side,
+        .folder .back-side {
+            position: absolute;
+            transition: transform var(--transition);
+            transform-origin: bottom center;
+            top: 0;
+            left: 0;
+        }
+
+        .folder .back-side::before,
+        .folder .back-side::after {
+            content: "";
+            display: block;
+            background-color: white;
+            opacity: 0.5;
+            width: var(--folder-W);
+            height: var(--folder-H);
+            position: absolute;
+            top: 0;
+            left: 0;
+            transform-origin: bottom center;
+            border-radius: 15px;
+            transition: transform 350ms;
+            z-index: 0;
+        }
+
+        .upload-section:hover .back-side::before {
+            transform: rotateX(-5deg) skewX(5deg);
+        }
+        
+        .upload-section:hover .back-side::after {
+            transform: rotateX(-15deg) skewX(12deg);
+        }
+
+        .folder .front-side {
+            z-index: 1;
+        }
+
+        .upload-section:hover .front-side {
+            transform: rotateX(-40deg) skewX(15deg);
+        }
+
+        .folder .tip {
+            background: linear-gradient(135deg, #ff9a56, #ff6f56);
+            width: 80px;
+            height: 20px;
+            border-radius: 12px 12px 0 0;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            position: absolute;
+            top: -10px;
+            left: 0;
+            z-index: 2;
+        }
+
+        .folder .cover {
+            background: linear-gradient(135deg, #ffe563, #ffc663);
+            width: var(--folder-W);
+            height: var(--folder-H);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
         }
 
         .upload-text {
-            color: hsl(var(--muted-foreground));
-            font-size: 14px;
-            line-height: 1.6;
+            font-size: 1.1em;
+            color: #ffffff;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            transition: background var(--transition) ease;
+            display: inline-block;
+            width: 100%;
+            padding: 10px 35px;
+            position: relative;
+            z-index: 10;
+            pointer-events: none;
+            line-height: 1.4;
+        }
+
+        .upload-section:hover .upload-text {
+            background: rgba(255, 255, 255, 0.4);
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(0px);
+            }
+
+            50% {
+                transform: translateY(-20px);
+            }
+
+            100% {
+                transform: translateY(0px);
+            }
         }
 
         #fileInput {
@@ -99,7 +214,9 @@
             display: flex;
             flex-wrap: wrap;
             gap: 12px;
-            margin-top: 20px;
+            margin-bottom: 24px;
+            justify-content: center;
+            max-width: 900px;
         }
 
         .thumbnail-item {
@@ -407,37 +524,51 @@
         }
 
         .btn-play {
-            width: 100px;
-            height: 100px;
-            border-radius: 50%;
-            background: hsl(var(--primary));
-            color: hsl(var(--primary-foreground));
+            width: 140px;
+            height: 56px;
+            border-radius: 50px;
+            background-image: linear-gradient(135deg, #feb692 0%, #ea5455 100%);
+            box-shadow: 0 20px 30px -6px rgba(238, 103, 97, 0.5);
+            border: none;
+            cursor: pointer;
+            color: white;
             font-size: 24px;
             display: flex;
-            flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: 4px;
-            transition: all 0.2s ease;
+            transition: all 0.3s ease-in-out;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
         }
 
         .btn-play #playIcon {
             font-size: 28px;
         }
 
-        .btn-play #playText {
-            font-size: 11px;
+        .btn-play-text {
+            position: absolute;
+            bottom: -32px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 13px;
             font-weight: 500;
+            color: hsl(var(--muted-foreground));
+            white-space: nowrap;
         }
 
         .btn-play:hover {
-            transform: scale(1.05);
+            transform: translateY(3px);
+            box-shadow: none;
+        }
+
+        .btn-play:active {
+            opacity: 0.5;
         }
 
         .btn-play:disabled {
             opacity: 0.4;
             cursor: not-allowed;
             transform: none;
+            box-shadow: none;
         }
 
         .btn-nav {
@@ -559,6 +690,56 @@
         .result-list::-webkit-scrollbar-thumb:hover {
             background: hsl(var(--muted-foreground));
         }
+
+        /* Shadcn/ui style select wrapper */
+        .select-wrapper {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .select-wrapper select {
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            padding: 8px 36px 8px 12px;
+            padding-right: 36px;
+            border-radius: 6px;
+            background: hsl(var(--background));
+            color: hsl(var(--foreground));
+            border: 1px solid hsl(var(--border));
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+            min-width: 80px;
+        }
+
+        .select-wrapper select:hover {
+            border-color: hsl(var(--ring));
+        }
+
+        .select-wrapper select:focus {
+            outline: none;
+            border-color: hsl(var(--ring));
+            box-shadow: 0 0 0 2px hsl(var(--ring) / 0.2);
+        }
+
+        .select-wrapper select:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .select-icon {
+            position: absolute;
+            right: 10px;
+            pointer-events: none;
+            color: hsl(var(--muted-foreground));
+            transition: transform 0.2s;
+        }
+
+        .select-wrapper:hover .select-icon {
+            color: hsl(var(--foreground));
+        }
     </style>
 </head>
 <body>
@@ -568,13 +749,23 @@
 
         <!-- 上传区域 -->
         <div class="upload-section" id="uploadArea">
-            <div class="upload-text">
-                Click or drag images here to upload<br>
-                Support multiple images, JPG/PNG formats
+            <div class="folder">
+                <div class="back-side">
+                    <div class="cover"></div>
+                </div>
+                <div class="front-side">
+                    <div class="tip"></div>
+                    <div class="cover"></div>
+                </div>
             </div>
-            <div class="thumbnails-container" id="thumbnailsContainer"></div>
+            <div class="upload-text">
+                Upload a File
+            </div>
             <input type="file" id="fileInput" accept="image/*" multiple>
         </div>
+
+        <!-- 缩略图容器 -->
+        <div class="thumbnails-container" id="thumbnailsContainer"></div>
 
         <!-- 状态提示 -->
         <div class="status" id="status"></div>
@@ -607,12 +798,24 @@
             </div>
 
             <div class="player-controls">
-                <button class="btn btn-secondary btn-nav" onclick="prevItem()" id="btnPrev" disabled>Previous</button>
-                <button class="btn btn-play" onclick="togglePlay()" id="btnPlay" disabled>
-                    <span id="playIcon">▶</span>
-                    <span id="playText">Start Dictation</span>
+                <button class="btn btn-secondary btn-nav" onclick="prevItem()" id="btnPrev" disabled>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 6px;">
+                        <polyline points="15 18 9 12 15 6"></polyline>
+                    </svg>
+                    Previous
                 </button>
-                <button class="btn btn-secondary btn-nav" onclick="nextItem()" id="btnNext" disabled>Next</button>
+                <div style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
+                    <button class="btn btn-play" onclick="togglePlay()" id="btnPlay" disabled>
+                        <span id="playIcon">▶</span>
+                    </button>
+                    <span class="btn-play-text" id="playText">Start Dictation</span>
+                </div>
+                <button class="btn btn-secondary btn-nav" onclick="nextItem()" id="btnNext" disabled>
+                    Next
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-left: 6px;">
+                        <polyline points="9 18 15 12 9 6"></polyline>
+                    </svg>
+                </button>
             </div>
 
             <!-- Settings -->
@@ -620,25 +823,35 @@
                 <!-- Interval -->
                 <div style="display: flex; align-items: center; gap: 8px;">
                     <label style="font-size: 13px; color: hsl(var(--muted-foreground));">Interval</label>
-                    <select id="intervalSlider" style="padding: 6px 12px; border-radius: 6px; background: hsl(var(--secondary)); color: hsl(var(--foreground)); border: 1px solid hsl(var(--border)); font-size: 13px; cursor: pointer;">
-                        <option value="5">5s</option>
-                        <option value="10" selected>10s</option>
-                        <option value="15">15s</option>
-                        <option value="20">20s</option>
-                        <option value="25">25s</option>
-                    </select>
+                    <div class="select-wrapper">
+                        <select id="intervalSlider">
+                            <option value="5">5s</option>
+                            <option value="10" selected>10s</option>
+                            <option value="15">15s</option>
+                            <option value="20">20s</option>
+                            <option value="25">25s</option>
+                        </select>
+                        <svg class="select-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                    </div>
                 </div>
 
                 <!-- Loop Count -->
                 <div style="display: flex; align-items: center; gap: 8px;">
                     <label style="font-size: 13px; color: hsl(var(--muted-foreground));">Loop Count</label>
-                    <select id="loopCount" style="padding: 6px 12px; border-radius: 6px; background: hsl(var(--secondary)); color: hsl(var(--foreground)); border: 1px solid hsl(var(--border)); font-size: 13px; cursor: pointer;">
-                        <option value="1">1x</option>
-                        <option value="2">2x</option>
-                        <option value="3">3x</option>
-                        <option value="4">4x</option>
-                        <option value="5">5x</option>
-                    </select>
+                    <div class="select-wrapper">
+                        <select id="loopCount">
+                            <option value="1">1x</option>
+                            <option value="2">2x</option>
+                            <option value="3">3x</option>
+                            <option value="4">4x</option>
+                            <option value="5">5x</option>
+                        </select>
+                        <svg class="select-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                    </div>
                 </div>
             </div>
             </div>
